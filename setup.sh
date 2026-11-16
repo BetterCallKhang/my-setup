@@ -119,6 +119,15 @@ setup_default_ui() {
         if command -v paru &> /dev/null; then
             log_info "Installing oreo-cursors-git via paru..."
             paru -S --needed --noconfirm oreo-cursors-git 2>/dev/null || true
+        else
+            log_info "Downloading Oreo cursors from GitHub..."
+            local TMP_OREO
+            TMP_OREO="$(mktemp -d /tmp/oreo-cursor.XXXXXX)"
+            git clone --depth=1 https://github.com/varlesh/oreo-cursors.git "$TMP_OREO" 2>/dev/null || true
+            if [ -d "$TMP_OREO" ]; then
+                cp -r "$TMP_OREO/dist"/* "$ICONS_DIR/" 2>/dev/null || cp -r "$TMP_OREO"/* "$ICONS_DIR/" 2>/dev/null || true
+                rm -rf "$TMP_OREO"
+            fi
         fi
     fi
     apply_cursor_dotfile "oreo_spark_pink_cursors"
@@ -154,7 +163,7 @@ setup_docker() {
 setup_warp() {
     echo ""
     log_info "$(t warp_setup)"
-    if command -v warp-cli &> /dev/null || pacman -Qq cloudflare-warp-bin &> /dev/null 2>&1; then
+    if command -v warp-cli &> /dev/null || command -v warp-svc &> /dev/null || [ -f /usr/bin/warp-cli ]; then
         sudo systemctl enable --now warp-svc
         log_success "$(t warp_done)"
     else

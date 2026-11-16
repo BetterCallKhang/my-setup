@@ -70,6 +70,14 @@ case "$pick" in
         show_image "$CURSORS_DIR/oreo.png" "40x16"
         if command -v paru &> /dev/null; then
             paru -S --needed --noconfirm oreo-cursors-git
+        elif [ ! -d "$ICONS_DEST/oreo_spark_pink_cursors" ] && [ ! -d "/usr/share/icons/oreo_spark_pink_cursors" ]; then
+            log_info "Downloading Oreo Cursors from GitHub..."
+            TMP_OREO="$(mktemp -d /tmp/oreo-cursor.XXXXXX)"
+            git clone --depth=1 https://github.com/varlesh/oreo-cursors.git "$TMP_OREO" 2>/dev/null || true
+            if [ -d "$TMP_OREO" ]; then
+                cp -r "$TMP_OREO/dist"/* "$ICONS_DEST/" 2>/dev/null || cp -r "$TMP_OREO"/* "$ICONS_DEST/" 2>/dev/null || true
+                rm -rf "$TMP_OREO"
+            fi
         fi
         apply_cursor_dotfile "oreo_spark_pink_cursors"
         log_success "$(t cursor_applied) oreo_spark_pink_cursors"
@@ -79,6 +87,13 @@ case "$pick" in
         show_image "$CURSORS_DIR/bibata_extra.png" "40x16"
         if command -v paru &> /dev/null; then
             paru -S --needed --noconfirm bibata-cursor-theme-bin
+        elif [ ! -d "$ICONS_DEST/Bibata-Modern-Classic" ] && [ ! -d "/usr/share/icons/Bibata-Modern-Classic" ]; then
+            log_info "Downloading Bibata Modern Classic cursor theme..."
+            TMP_BIBATA="$(mktemp -d /tmp/bibata-cursor.XXXXXX)"
+            if curl -fsSL "https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz" -o "$TMP_BIBATA/bibata.tar.xz" 2>/dev/null; then
+                tar -xf "$TMP_BIBATA/bibata.tar.xz" -C "$ICONS_DEST/" 2>/dev/null || true
+            fi
+            rm -rf "$TMP_BIBATA"
         fi
         apply_cursor_dotfile "Bibata-Modern-Classic"
         log_success "$(t cursor_applied) Bibata-Modern-Classic"

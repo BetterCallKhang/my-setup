@@ -2,7 +2,8 @@
 
 # ==============================================================================
 # Script: install.sh
-# Purpose: Package installer for Arch Linux and CachyOS
+# Purpose: Multi-distribution Package Installer
+#          Supports: Arch Linux/CachyOS (Pacman/Paru), Debian/Ubuntu (APT), Fedora (DNF)
 #          Reads package lists from:
 #          - packages/manager.md
 #          - packages/work.md
@@ -22,17 +23,9 @@ COLOR_BOLD="\033[1m"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGES_DIR="$SCRIPT_DIR/packages"
 
-# Load i18n
+# Load i18n & package manager adapter
 source "$SCRIPT_DIR/scripts/lib/i18n.sh"
-
-PARU_TMP_DIR=""
-
-cleanup_resources() {
-    if [ -n "$PARU_TMP_DIR" ] && [ -d "$PARU_TMP_DIR" ]; then
-        rm -rf "$PARU_TMP_DIR"
-    fi
-}
-trap cleanup_resources EXIT INT TERM
+source "$SCRIPT_DIR/scripts/lib/pkg_adapter.sh"
 
 log_info() { echo -e "${COLOR_BLUE}$(t info)${COLOR_RESET} $1"; }
 log_success() { echo -e "${COLOR_GREEN}$(t success)${COLOR_RESET} $1"; }
@@ -40,21 +33,16 @@ log_warning() { echo -e "${COLOR_YELLOW}$(t warning)${COLOR_RESET} $1"; }
 log_error() { echo -e "${COLOR_RED}$(t error)${COLOR_RESET} $1"; }
 
 # ------------------------------------------------------------------------------
-# Check OS (Arch Linux or CachyOS)
+# Check Operating System and Package Manager
 # ------------------------------------------------------------------------------
 check_os() {
     log_info "$(t inst_checking_os)"
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [[ "${ID:-}" == "arch" || "${ID_LIKE:-}" == *"arch"* || "${ID:-}" == "cachyos" ]]; then
-            log_success "$(t inst_os_valid) ${PRETTY_NAME:-Arch Linux}"
-        else
-            log_error "$(t inst_os_error)"
-            log_error "Current OS: ${PRETTY_NAME:-Unknown}"
-            exit 1
-        fi
+    if detect_system; then
+        log_success "$(t inst_os_valid) $DETECTED_OS_NAME ($DETECTED_OS_ID)"
+        log_info "$(t inst_detected_family) ${COLOR_GREEN}${DETECTED_FAMILY}${COLOR_RESET}"
+        log_info "$(t inst_detected_pkg_mgr) ${COLOR_CYAN}${DETECTED_PKG_MGR}${COLOR_RESET}"
     else
-        log_error "File /etc/os-release not found. Cannot determine OS."
+        log_error "$(t inst_os_error)"
         exit 1
     fi
 }
@@ -71,8 +59,20 @@ check_desktop_environment() {
         case "$install_de" in
             [yY]|[yY][eE][sS])
                 log_info "$(t inst_de_installing)"
-                sudo pacman -S --needed --noconfirm gnome gnome-tweaks gdm
-                sudo systemctl enable gdm
+                case "$DETECTED_FAMILY" in
+                    arch)
+                        sudo pacman -S --needed --noconfirm gnome gnome-tweaks gdm
+                        sudo systemctl enable gdm
+                        ;;
+                    debian)
+                        sudo apt-get install -y ubuntu-desktop-minimal gnome-tweaks gdm3 2>/dev/null || sudo apt-get install -y gnome-shell gnome-tweaks gdm3
+                        sudo systemctl enable gdm3 2>/dev/null || sudo systemctl enable gdm || true
+                        ;;
+                    fedora)
+                        sudo dnf groupinstall -y "GNOME Desktop Environment" 2>/dev/null || sudo dnf install -y gnome-shell gnome-tweaks gdm
+                        sudo systemctl enable gdm || true
+                        ;;
+                esac
                 log_success "$(t inst_de_done)"
                 ;;
             *)
@@ -83,51 +83,30 @@ check_desktop_environment() {
 }
 
 # ------------------------------------------------------------------------------
-# Bootstrap Paru (AUR Helper) if not found
-# ------------------------------------------------------------------------------
-bootstrap_paru() {
-    if command -v paru &> /dev/null; then
-        log_success "$(t inst_paru_found) $(command -v paru)"
-        return 0
-    fi
-
-    log_warning "$(t inst_paru_missing)"
-    log_info "$(t inst_paru_deps)"
-    sudo pacman -S --needed --noconfirm base-devel git
-
-    PARU_TMP_DIR="$(mktemp -d /tmp/paru-bootstrap.XXXXXX)"
-    log_info "$(t inst_paru_cloning) $PARU_TMP_DIR"
-    git clone https://aur.archlinux.org/paru-bin.git "$PARU_TMP_DIR"
-
-    (
-        cd "$PARU_TMP_DIR" || exit 1
-        makepkg -si --noconfirm
-    )
-
-    rm -rf "$PARU_TMP_DIR"
-    PARU_TMP_DIR=""
-
-    if command -v paru &> /dev/null; then
-        log_success "$(t inst_paru_success)"
-    else
-        log_error "$(t inst_paru_failed)"
-        exit 1
-    fi
-}
-
-# ------------------------------------------------------------------------------
-# Flatpak & Flathub setup
+# Flatpak & Flathub setup (Optional)
 # ------------------------------------------------------------------------------
 setup_flatpak() {
     log_info "$(t inst_flatpak_check)"
     if ! command -v flatpak &> /dev/null; then
         log_info "$(t inst_flatpak_installing)"
-        paru -S --needed --noconfirm flatpak
+        case "$DETECTED_FAMILY" in
+            arch)
+                paru -S --needed --noconfirm flatpak
+                ;;
+            debian)
+                sudo apt-get install -y flatpak
+                ;;
+            fedora)
+                sudo dnf install -y flatpak
+                ;;
+        esac
     fi
 
-    log_info "$(t inst_flatpak_remote)"
-    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    log_success "$(t inst_flatpak_done)"
+    if command -v flatpak &> /dev/null; then
+        log_info "$(t inst_flatpak_remote)"
+        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+        log_success "$(t inst_flatpak_done)"
+    fi
 }
 
 # ------------------------------------------------------------------------------
@@ -142,18 +121,14 @@ extract_packages_from_md() {
     fi
 
     awk -v target="$target_section" '
-    BEGIN { in_pacman=0; in_flatpak=0 }
-    /^## Pacman \/ AUR/ { in_pacman=1; in_flatpak=0; next }
-    /^## Flatpak/       { in_pacman=0; in_flatpak=1; next }
-    /^## /              { in_pacman=0; in_flatpak=0 }
+    BEGIN { cur="" }
+    /^## (Pacman|Arch)/           { cur="pacman"; next }
+    /^## (APT|Debian|Ubuntu)/     { cur="apt"; next }
+    /^## (DNF|Fedora)/            { cur="dnf"; next }
+    /^## Flatpak/                 { cur="flatpak"; next }
+    /^## /                        { cur="" }
 
-    target == "pacman" && in_pacman && /^[ \t]*-[ \t]*`/ {
-        match($0, /`[^`]+`/)
-        pkg = substr($0, RSTART+1, RLENGTH-2)
-        print pkg
-    }
-
-    target == "flatpak" && in_flatpak && /^[ \t]*-[ \t]*`/ {
+    target == cur && /^[ \t]*-[ \t]*`/ {
         match($0, /`[^`]+`/)
         pkg = substr($0, RSTART+1, RLENGTH-2)
         print pkg
@@ -173,20 +148,14 @@ extract_packages_with_desc() {
     fi
 
     awk -v target="$target_section" '
-    BEGIN { in_pacman=0; in_flatpak=0 }
-    /^## Pacman \/ AUR/ { in_pacman=1; in_flatpak=0; next }
-    /^## Flatpak/       { in_pacman=0; in_flatpak=1; next }
-    /^## /              { in_pacman=0; in_flatpak=0 }
+    BEGIN { cur="" }
+    /^## (Pacman|Arch)/           { cur="pacman"; next }
+    /^## (APT|Debian|Ubuntu)/     { cur="apt"; next }
+    /^## (DNF|Fedora)/            { cur="dnf"; next }
+    /^## Flatpak/                 { cur="flatpak"; next }
+    /^## /                        { cur="" }
 
-    target == "pacman" && in_pacman && /^[ \t]*-[ \t]*`/ {
-        match($0, /`[^`]+`/)
-        pkg = substr($0, RSTART+1, RLENGTH-2)
-        desc = substr($0, RSTART+RLENGTH)
-        sub(/^[ \t]*[-:]*[ \t]*/, "", desc)
-        print pkg "::" desc
-    }
-
-    target == "flatpak" && in_flatpak && /^[ \t]*-[ \t]*`/ {
+    target == cur && /^[ \t]*-[ \t]*`/ {
         match($0, /`[^`]+`/)
         pkg = substr($0, RSTART+1, RLENGTH-2)
         desc = substr($0, RSTART+RLENGTH)
@@ -201,15 +170,17 @@ extract_packages_with_desc() {
 # ------------------------------------------------------------------------------
 display_packages_list() {
     local files=("$@")
-    local pacman_items=()
+    local native_items=()
     local flatpak_items=()
+
+    [ -z "$DETECTED_PKG_MGR" ] && detect_system
 
     for file_name in "${files[@]}"; do
         local full_path="$PACKAGES_DIR/$file_name"
         if [ -f "$full_path" ]; then
             while IFS= read -r line; do
-                [ -n "$line" ] && pacman_items+=("$line")
-            done < <(extract_packages_with_desc "$full_path" "pacman")
+                [ -n "$line" ] && native_items+=("$line")
+            done < <(extract_packages_with_desc "$full_path" "$DETECTED_PKG_MGR")
 
             while IFS= read -r line; do
                 [ -n "$line" ] && flatpak_items+=("$line")
@@ -222,31 +193,39 @@ display_packages_list() {
     echo -e "${COLOR_BOLD}         $(t inst_confirm_title)           ${COLOR_RESET}"
     echo -e "${COLOR_CYAN}================================================================${COLOR_RESET}"
 
-    if [ ${#pacman_items[@]} -gt 0 ]; then
-        echo -e "\n${COLOR_YELLOW}[ Pacman / AUR ] (${#pacman_items[@]} packages):${COLOR_RESET}"
+    local mgr_label
+    case "$DETECTED_PKG_MGR" in
+        pacman) mgr_label="Pacman / AUR" ;;
+        apt) mgr_label="APT (Debian / Ubuntu)" ;;
+        dnf) mgr_label="DNF (Fedora)" ;;
+        *) mgr_label="Native Packages" ;;
+    esac
+
+    if [ ${#native_items[@]} -gt 0 ]; then
+        echo -e "\n${COLOR_YELLOW}[ $mgr_label ] (${#native_items[@]} packages):${COLOR_RESET}"
         local idx=1
-        for item in "${pacman_items[@]}"; do
+        for item in "${native_items[@]}"; do
             local pkg="${item%%::*}"
             local desc="${item#*::}"
-            printf "  %2d. ${COLOR_GREEN}%-25s${COLOR_RESET} : %s\n" "$idx" "$pkg" "$desc"
+            printf "  %2d. ${COLOR_GREEN}%-28s${COLOR_RESET} : %s\n" "$idx" "$pkg" "$desc"
             ((idx++))
         done
     fi
 
     if [ ${#flatpak_items[@]} -gt 0 ]; then
-        echo -e "\n${COLOR_YELLOW}[ Flatpak / Flathub ] (${#flatpak_items[@]} apps):${COLOR_RESET}"
+        echo -e "\n${COLOR_YELLOW}[ Flatpak / Flathub (Optional) ] (${#flatpak_items[@]} apps):${COLOR_RESET}"
         local fidx=1
         for item in "${flatpak_items[@]}"; do
             local pkg="${item%%::*}"
             local desc="${item#*::}"
-            printf "  %2d. ${COLOR_GREEN}%-25s${COLOR_RESET} : %s\n" "$fidx" "$pkg" "$desc"
+            printf "  %2d. ${COLOR_GREEN}%-28s${COLOR_RESET} : %s\n" "$fidx" "$pkg" "$desc"
             ((fidx++))
         done
     fi
 
     echo ""
     echo -e "${COLOR_CYAN}----------------------------------------------------------------${COLOR_RESET}"
-    echo -e "Total: ${COLOR_GREEN}${#pacman_items[@]} Pacman/AUR packages${COLOR_RESET} and ${COLOR_GREEN}${#flatpak_items[@]} Flatpak apps${COLOR_RESET}."
+    echo -e "Total: ${COLOR_GREEN}${#native_items[@]} $mgr_label packages${COLOR_RESET} and ${COLOR_GREEN}${#flatpak_items[@]} Flatpak apps${COLOR_RESET}."
     echo -e "${COLOR_CYAN}================================================================${COLOR_RESET}"
     echo ""
 }
@@ -285,20 +264,23 @@ install_from_file() {
         return 1
     fi
 
-    # 1. Pacman / AUR
-    mapfile -t pacman_pkgs < <(extract_packages_from_md "$full_path" "pacman")
-    if [ ${#pacman_pkgs[@]} -gt 0 ]; then
-        log_info "Installing ${#pacman_pkgs[@]} Pacman/AUR packages via paru..."
-        paru -S --needed --noconfirm "${pacman_pkgs[@]}"
-        log_success "Finished installing Pacman/AUR packages for $category_name."
+    # 1. Native packages via active package manager
+    mapfile -t native_pkgs < <(extract_packages_from_md "$full_path" "$DETECTED_PKG_MGR")
+    if [ ${#native_pkgs[@]} -gt 0 ]; then
+        log_info "Installing ${#native_pkgs[@]} native packages via $DETECTED_PKG_MGR..."
+        install_native_packages "${native_pkgs[@]}"
+        log_success "Finished installing native packages for $category_name."
     fi
 
-    # 2. Flatpak
+    # Post-install native helpers (uv, pnpm, Nerd Font, Vesktop native deb/rpm)
+    post_install_helpers "$category_name"
+
+    # 2. Flatpak (if defined and Flatpak is installed)
     mapfile -t flatpak_pkgs < <(extract_packages_from_md "$full_path" "flatpak")
-    if [ ${#flatpak_pkgs[@]} -gt 0 ]; then
+    if [ ${#flatpak_pkgs[@]} -gt 0 ] && command -v flatpak &> /dev/null; then
         for app in "${flatpak_pkgs[@]}"; do
             log_info "Installing Flatpak: $app..."
-            flatpak install -y flathub "$app"
+            flatpak install -y flathub "$app" 2>/dev/null || true
         done
         log_success "Finished installing Flatpak apps for $category_name."
     fi
@@ -313,7 +295,7 @@ cleanup_package_cache() {
     case "$clean_ans" in
         [yY]|[yY][eE][sS])
             log_info "$(t inst_clean_cache_cleaning)"
-            paru -Sc --noconfirm
+            clean_system_cache
             log_success "$(t inst_clean_cache_done)"
             ;;
         *)
@@ -386,8 +368,7 @@ show_menu() {
             check_os
             check_desktop_environment
             if confirm_installation "manager.md" "work.md" "social.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "manager.md" "Manager"
                 install_from_file "work.md" "Work"
                 install_from_file "social.md" "Social"
@@ -399,8 +380,7 @@ show_menu() {
             check_os
             check_desktop_environment
             if confirm_installation "manager.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "manager.md" "Manager"
                 cleanup_package_cache
                 prompt_setup_sh
@@ -409,7 +389,7 @@ show_menu() {
         3)
             check_os
             if confirm_installation "work.md"; then
-                bootstrap_paru
+                bootstrap_environment
                 install_from_file "work.md" "Work"
                 cleanup_package_cache
                 prompt_setup_sh
@@ -418,14 +398,14 @@ show_menu() {
         4)
             check_os
             if confirm_installation "social.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "social.md" "Social"
                 cleanup_package_cache
                 prompt_setup_sh
             fi
             ;;
         5)
+            check_os
             display_packages_list "manager.md" "work.md" "social.md"
             ;;
         [lL])
@@ -451,8 +431,7 @@ if [ $# -gt 0 ]; then
             check_os
             check_desktop_environment
             if confirm_installation "manager.md" "work.md" "social.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "manager.md" "Manager"
                 install_from_file "work.md" "Work"
                 install_from_file "social.md" "Social"
@@ -464,8 +443,7 @@ if [ $# -gt 0 ]; then
             check_os
             check_desktop_environment
             if confirm_installation "manager.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "manager.md" "Manager"
                 cleanup_package_cache
                 prompt_setup_sh
@@ -474,7 +452,7 @@ if [ $# -gt 0 ]; then
         work)
             check_os
             if confirm_installation "work.md"; then
-                bootstrap_paru
+                bootstrap_environment
                 install_from_file "work.md" "Work"
                 cleanup_package_cache
                 prompt_setup_sh
@@ -483,14 +461,14 @@ if [ $# -gt 0 ]; then
         social)
             check_os
             if confirm_installation "social.md"; then
-                bootstrap_paru
-                setup_flatpak
+                bootstrap_environment
                 install_from_file "social.md" "Social"
                 cleanup_package_cache
                 prompt_setup_sh
             fi
             ;;
         check)
+            check_os
             display_packages_list "manager.md" "work.md" "social.md"
             ;;
         *)

@@ -6,7 +6,7 @@ Tài liệu này lưu trữ danh sách các phần mềm phục vụ lập trìn
 
 ## Pacman / AUR
 
-Các gói này sẽ được cài đặt thông qua `paru` (hoặc `pacman`).
+Các gói này sẽ được cài đặt thông qua `paru` (hoặc `pacman`) trên Arch Linux và CachyOS.
 
 ### 1. Trình soạn thảo & Môi trường phát triển (IDE)
 - `visual-studio-code-bin`: Trình soạn thảo mã nguồn Microsoft Visual Studio Code (bản binary chính thức từ Microsoft).
@@ -21,13 +21,55 @@ Các gói này sẽ được cài đặt thông qua `paru` (hoặc `pacman`).
 - `postman-bin`: Nền tảng API chuyên nghiệp dùng để gửi request HTTP/HTTPS, kiểm thử và tài liệu hóa RESTful API.
 
 ### 4. Văn phòng & Công cụ Hỗ trợ
-- `onlyoffice-bin`: Bộ ứng dụng văn phòng (tài liệu văn bản, bảng tính spreadsheet, trình chiếu slide) có độ tương thích định dạng Microsoft Office (.docx, .xlsx, .pptx) cao nhất trên Linux.
-- `flameshot`: Ứng dụng chụp ảnh màn hình tiện lợi, hỗ trợ vẽ hình khối, mũi tên, bôi đen làm mờ thông tin nhạy cảm và copy nhanh vào clipboard.
+- `onlyoffice-bin`: Bộ ứng dụng văn phòng (tài liệu văn bản, bảng tính spreadsheet, trình chiếu slide) có độ tương thích cao.
+- `flameshot`: Ứng dụng chụp ảnh màn hình tiện lợi, hỗ trợ vẽ hình khối, mũi tên, bôi đen làm mờ thông tin.
 - `obs-studio`: Phần mềm mã nguồn mở mạnh mẽ để quay video màn hình chất lượng cao và livestream.
 
 ### 5. Container & Ảo hóa
 - `docker`: Nền tảng container hóa hàng đầu giúp chạy các ứng dụng, database và môi trường cô lập.
 - `docker-compose`: Công cụ quản lý và khởi chạy ứng dụng nhiều container thông qua file cấu hình YAML.
+
+---
+
+## APT (Debian / Ubuntu)
+
+Các gói này sẽ được cài đặt trực tiếp qua `apt` trên Ubuntu, Debian, Linux Mint, Pop!_OS.
+
+### 1. Trình soạn thảo & Môi trường phát triển (IDE)
+- `code`: Trình soạn thảo Microsoft Visual Studio Code (kho APT chính thức từ Microsoft).
+
+### 2. Quản trị Cơ sở Dữ liệu
+- `dbeaver-ce`: Trình quản trị cơ sở dữ liệu phổ quát DBeaver Community Edition.
+
+### 3. Văn phòng & Công cụ Hỗ trợ
+- `onlyoffice-desktopeditors`: Bộ ứng dụng văn phòng OnlyOffice Desktop Editors chính thức.
+- `flameshot`: Tiện ích chụp ảnh màn hình, chú thích và lưu nhanh.
+- `obs-studio`: Phần mềm quay màn hình và phát sóng trực tiếp (livestream).
+
+### 4. Container & Ảo hóa
+- `docker.io`: Nền tảng container Docker runtime cho Debian/Ubuntu.
+- `docker-compose-v2`: Công cụ quản lý Docker Compose nhiều container.
+
+---
+
+## DNF (Fedora)
+
+Các gói này sẽ được cài đặt trực tiếp qua `dnf` trên Fedora, RHEL, Nobara.
+
+### 1. Trình soạn thảo & Môi trường phát triển (IDE)
+- `code`: Trình soạn thảo Microsoft Visual Studio Code (kho DNF chính thức từ Microsoft).
+
+### 2. Quản trị Cơ sở Dữ liệu
+- `dbeaver-ce`: Trình quản trị cơ sở dữ liệu phổ quát DBeaver Community Edition.
+
+### 3. Văn phòng & Công cụ Hỗ trợ
+- `onlyoffice-desktopeditors`: Bộ ứng dụng văn phòng OnlyOffice Desktop Editors chính thức.
+- `flameshot`: Tiện ích chụp ảnh màn hình và chú thích ảnh.
+- `obs-studio`: Phần mềm quay màn hình và livestream mã nguồn mở.
+
+### 4. Container & Ảo hóa
+- `moby-engine`: Nền tảng container Moby/Docker cho Fedora.
+- `docker-compose`: Tiện ích điều phối container Docker Compose.
 
 ---
 
@@ -50,4 +92,3 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
 ```
 *(Script `setup.sh` sẽ tự động thực hiện cấu hình này cho bạn)*
-

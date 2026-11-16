@@ -45,12 +45,14 @@ t() {
             select_prompt) echo "Nhap lua chon cua ban: " ;;
 
             # Installer
-            inst_checking_os) echo "Dang kiem tra he dieu hanh..." ;;
+            inst_checking_os) echo "Dang kiem tra he dieu hanh va trinh quan ly goi..." ;;
             inst_os_valid) echo "He dieu hanh hop le:" ;;
-            inst_os_error) echo "Kich ban nay duoc thiet ke rieng cho Arch Linux hoac CachyOS." ;;
+            inst_os_error) echo "He dieu hanh khong duoc ho tro. Cac he dieu hanh ho tro: Arch/CachyOS (Pacman), Ubuntu/Debian (APT), Fedora (DNF)." ;;
+            inst_detected_family) echo "Nhom he dieu hanh:" ;;
+            inst_detected_pkg_mgr) echo "Trinh quan ly goi duoc su dung:" ;;
             inst_de_warn) echo "Chua phat hien moi truong do hoa (GNOME hoac Hyprland)." ;;
             inst_de_prompt) echo "Ban co muon cai dat GNOME Desktop Environment va GDM khong? [Y/n]: " ;;
-            inst_de_installing) echo "Dang cai dat GNOME va GDM bang pacman..." ;;
+            inst_de_installing) echo "Dang cai dat GNOME va GDM..." ;;
             inst_de_done) echo "Da cai dat GNOME va kich hoat GDM (se tu khoi dong khi reboot)." ;;
             inst_de_skip) echo "Bo qua cai dat giao dien Desktop." ;;
             inst_paru_found) echo "Da tim thay 'paru' tren he thong:" ;;
@@ -59,8 +61,8 @@ t() {
             inst_paru_cloning) echo "Clone repository paru-bin tu nguon chinh thuc AUR vao:" ;;
             inst_paru_success) echo "Cai dat 'paru' thanh cong va da don dep thu muc tam." ;;
             inst_paru_failed) echo "Cai dat 'paru' that bai. Vui long kiem tra lai ket noi mang." ;;
-            inst_flatpak_check) echo "Kiem tra va cau hinh Flatpak..." ;;
-            inst_flatpak_installing) echo "Dang cai dat Flatpak bang paru..." ;;
+            inst_flatpak_check) echo "Kiem tra va cau hinh Flatpak (tuy chon danh cho cac ung dung Flatpak)..." ;;
+            inst_flatpak_installing) echo "Dang cai dat Flatpak..." ;;
             inst_flatpak_remote) echo "Dam bao kho ung dung 'flathub' da duoc them..." ;;
             inst_flatpak_done) echo "Cau hinh Flatpak va kho Flathub hoan tat." ;;
             inst_confirm_title) echo "DANH SACH CAC UNG DUNG SE DUOC TAI & CAI DAT" ;;
@@ -74,7 +76,7 @@ t() {
             inst_setup_prompt) echo "Chay './setup.sh' ngay bay gio de tao lien ket config va bat service? [Y/n]: " ;;
             inst_setup_manual) echo "Ban co the chay './setup.sh' thu cong bat cu luc nao." ;;
             inst_setup_handoff) echo "Chuyen giao sang setup.sh..." ;;
-            inst_menu_title) echo "DOTFILES PACKAGES INSTALLER - ARCH / CACHYOS" ;;
+            inst_menu_title) echo "DOTFILES PACKAGES INSTALLER" ;;
             inst_menu_prompt) echo "Vui long chon danh muc ban muon cai dat:" ;;
             inst_opt_all) echo "Cai dat TOAN BO (Manager + Work + Social)" ;;
             inst_opt_manager) echo "Chi cai dat Manager (Nen tang, Trinh duyet, Bo go, Font, Runtime)" ;;
@@ -161,12 +163,14 @@ t() {
             select_prompt) echo "Enter your choice: " ;;
 
             # Installer
-            inst_checking_os) echo "Checking operating system..." ;;
-            inst_os_valid) echo "Valid operating system:" ;;
-            inst_os_error) echo "This script is designed specifically for Arch Linux or CachyOS." ;;
+            inst_checking_os) echo "Checking operating system and package manager..." ;;
+            inst_os_valid) echo "Supported operating system:" ;;
+            inst_os_error) echo "Operating system not supported. Supported: Arch/CachyOS (Pacman), Ubuntu/Debian (APT), Fedora (DNF)." ;;
+            inst_detected_family) echo "Detected OS Family:" ;;
+            inst_detected_pkg_mgr) echo "Active package manager:" ;;
             inst_de_warn) echo "No desktop environment detected (GNOME or Hyprland)." ;;
             inst_de_prompt) echo "Do you want to install GNOME Desktop Environment and GDM? [Y/n]: " ;;
-            inst_de_installing) echo "Installing GNOME and GDM using pacman..." ;;
+            inst_de_installing) echo "Installing GNOME and GDM..." ;;
             inst_de_done) echo "GNOME installed and GDM enabled (will launch on reboot)." ;;
             inst_de_skip) echo "Skipping desktop environment installation." ;;
             inst_paru_found) echo "Found 'paru' on system:" ;;
@@ -175,8 +179,8 @@ t() {
             inst_paru_cloning) echo "Cloning paru-bin from official AUR to:" ;;
             inst_paru_success) echo "Installed 'paru' successfully and cleaned temporary directory." ;;
             inst_paru_failed) echo "Failed to install 'paru'. Please check your network connection." ;;
-            inst_flatpak_check) echo "Checking and configuring Flatpak..." ;;
-            inst_flatpak_installing) echo "Installing Flatpak using paru..." ;;
+            inst_flatpak_check) echo "Checking and configuring Flatpak (optional for Flatpak apps)..." ;;
+            inst_flatpak_installing) echo "Installing Flatpak..." ;;
             inst_flatpak_remote) echo "Ensuring 'flathub' remote is added..." ;;
             inst_flatpak_done) echo "Flatpak and Flathub configuration complete." ;;
             inst_confirm_title) echo "PACKAGES TO BE INSTALLED" ;;
@@ -190,7 +194,7 @@ t() {
             inst_setup_prompt) echo "Run './setup.sh' now to link configs and enable services? [Y/n]: " ;;
             inst_setup_manual) echo "You can run './setup.sh' manually whenever you want." ;;
             inst_setup_handoff) echo "Handing over to setup.sh..." ;;
-            inst_menu_title) echo "DOTFILES PACKAGES INSTALLER - ARCH / CACHYOS" ;;
+            inst_menu_title) echo "DOTFILES PACKAGES INSTALLER" ;;
             inst_menu_prompt) echo "Please choose package categories to install:" ;;
             inst_opt_all) echo "Install ALL (Manager + Work + Social)" ;;
             inst_opt_manager) echo "Manager only (Base tools, Browser, Vietnamese input, Fonts, Runtimes)" ;;

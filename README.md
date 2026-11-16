@@ -4,10 +4,13 @@
 
 # My Dotfiles & Linux Setup
 
-A clean and automated dotfiles setup to recreate a development environment on Arch-based distributions (CachyOS, Arch Linux).
+A clean and automated dotfiles setup to recreate a development environment across popular Linux distributions:
+- **Arch-based**: Arch Linux, CachyOS, EndeavourOS, Manjaro (via `pacman` & `paru` AUR).
+- **Debian / Ubuntu-based**: Ubuntu, Debian, Linux Mint, Pop!_OS (via `apt` with automated vendor repository setup).
+- **Fedora-based**: Fedora, RHEL, Nobara (via `dnf` with automated RPM repository setup).
 
 Architecture follows separation of concerns:
-- **`install.sh`**: Handles package installation only (Pacman, AUR via Paru, Flatpak).
+- **`install.sh`**: Auto-detects your distribution and installs native packages via the corresponding package manager (Pacman, APT, DNF).
 - **`setup.sh`**: Links configuration dotfiles to `~/.config/`, sets up default desktop themes, and enables services.
 - **`scripts/`**: Individual management scripts matching corresponding `assets/` directories (Cursors, Icons, Wallpapers, GRUB).
 
@@ -72,6 +75,33 @@ Or run individual modular scripts directly:
 - `./scripts/icons.sh`: Select and apply icon theme (Default: Candy Icons).
 - `./scripts/wallpapers.sh`: Preview and set wallpaper using `chafa`.
 - `./scripts/grub.sh`: Install GRUB bootloader theme.
+
+### Step 4: Reboot your system
+Reboot (or log out) so that all environment variables and user group permissions take effect:
+```bash
+sudo reboot
+```
+
+---
+
+## Important Post-Installation Notes
+
+> [!IMPORTANT]
+> **1. Rootless Docker Permissions**:
+> After rebooting, your user account is in the `docker` group, allowing you to run `docker ps` and `docker compose` without `sudo`.
+>
+> **2. Vietnamese Input Setup (Fcitx5)**:
+> - After rebooting, open **Fcitx5 Configuration** (or execute `fcitx5-configtool` in a terminal).
+> - In the **Input Method** tab, uncheck *Only Show Current Language*, search for and add **Unikey**.
+> - The default toggle shortcut is `Ctrl + Space`.
+>
+> **3. Activate Cloudflare WARP (1.1.1.1 VPN)**:
+> The background service `warp-svc` is enabled automatically. To connect for the first time, run:
+> ```bash
+> warp-cli registration new
+> warp-cli connect
+> ```
+> To check connection status: `warp-cli status`. To disconnect: `warp-cli disconnect`.
 
 ---
 

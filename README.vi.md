@@ -4,10 +4,13 @@
 
 # My Dotfiles & Thiết lập Môi trường Linux
 
-Kho lưu trữ cá nhân giúp tự động hóa và tái tạo môi trường làm việc khi chuyển đổi hoặc cài đặt mới các bản phân phối Linux họ Arch (CachyOS, Arch Linux).
+Kho lưu trữ cá nhân giúp tự động hóa và tái tạo môi trường làm việc khi chuyển đổi hoặc cài đặt mới trên các bản phân phối Linux phổ biến:
+- **Arch-based**: Arch Linux, CachyOS, EndeavourOS, Manjaro (dùng `pacman` và `paru` AUR).
+- **Debian / Ubuntu-based**: Ubuntu, Debian, Linux Mint, Pop!_OS (dùng `apt` và tự động cấu hình repo chính thức).
+- **Fedora-based**: Fedora, RHEL, Nobara (dùng `dnf` và tự động cấu hình repo RPM chính thức).
 
 Dự án tuân thủ kiến trúc phân tách rõ ràng:
-- **`install.sh`**: Chuyên trách tải và cài đặt các gói phần mềm (Pacman, AUR qua Paru, Flatpak).
+- **`install.sh`**: Tự động nhận diện distro và cài đặt các gói phần mềm bằng trình quản lý gói tương ứng (Pacman, APT, DNF).
 - **`setup.sh`**: Chuyên trách liên kết cấu hình dotfiles bằng Symlink, thiết lập giao diện và kích hoạt các services.
 - **`scripts/`**: Các kịch bản chuyên biệt tương ứng từng danh mục trong `assets/` (Cursors, Icons, Wallpapers, GRUB).
 
@@ -72,6 +75,33 @@ Hoặc bạn có thể chạy trực tiếp từng kịch bản con trong `scrip
 - `./scripts/icons.sh`: Chọn bộ biểu tượng (Mặc định: Candy Icons).
 - `./scripts/wallpapers.sh`: Duyệt và xem trước hình nền bằng `chafa`.
 - `./scripts/grub.sh`: Cài đặt giao diện menu khởi động GRUB.
+
+### Bước 4: Khởi động lại hệ thống
+Khởi động lại (hoặc đăng xuất) để toàn bộ biến môi trường và quyền hạn có hiệu lực:
+```bash
+sudo reboot
+```
+
+---
+
+## Các Lưu ý Quan Trọng Sau Khi Cài Đặt (Post-Installation)
+
+> [!IMPORTANT]
+> **1. Phân quyền Docker không cần `sudo`**:
+> Sau khi khởi động lại máy, người dùng hiện tại đã nằm trong nhóm `docker`, bạn có thể chạy ngay `docker ps` hay `docker compose` mà không cần gõ `sudo`.
+>
+> **2. Kích hoạt bộ gõ Tiếng Việt (Fcitx5)**:
+> - Sau khi khởi động lại, mở ứng dụng **Fcitx5 Configuration** (hoặc chạy lệnh `fcitx5-configtool` trong terminal).
+> - Tại tab **Input Method**, bỏ tích ô *Only Show Current Language*, tìm kiếm và nhấn `>` để thêm **Unikey**.
+> - Phím tắt mặc định để bật/tắt gõ tiếng Việt là `Ctrl + Space`.
+>
+> **3. Kích hoạt Cloudflare WARP (VPN 1.1.1.1)**:
+> Dịch vụ nền `warp-svc` đã được bật sẵn. Khi cần sử dụng VPN lần đầu tiên, hãy chạy:
+> ```bash
+> warp-cli registration new
+> warp-cli connect
+> ```
+> Để kiểm tra kết nối: `warp-cli status`. Khi muốn ngắt kết nối: `warp-cli disconnect`.
 
 ---
 

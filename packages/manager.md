@@ -1,12 +1,12 @@
 # Packages: Quản lý hệ thống & Môi trường nền tảng (Manager)
 
-Tài liệu này lưu trữ danh sách các công cụ nền tảng, runtime, trình quản lý gói, font chữ, bộ gõ tiếng Việt và trình duyệt web cần thiết khi cài mới máy Arch Linux hoặc CachyOS.
+Tài liệu này lưu trữ danh sách các công cụ nền tảng, runtime, trình quản lý gói, font chữ, bộ gõ tiếng Việt và trình duyệt web cần thiết khi cài mới máy Linux (Arch/CachyOS, Ubuntu/Debian, Fedora).
 
 ---
 
 ## Pacman / AUR
 
-Các gói này sẽ được cài đặt qua `paru` (AUR Helper) hoặc `pacman`.
+Các gói này sẽ được cài đặt qua `paru` (AUR Helper) hoặc `pacman` trên Arch Linux và CachyOS.
 
 ### 1. Công cụ biên dịch & Quản lý mã nguồn
 - `base-devel`: Nhóm gói chứa gcc, make, fakeroot, autoconf... cần thiết để biên dịch phần mềm từ mã nguồn (bắt buộc để build các gói AUR).
@@ -15,7 +15,7 @@ Các gói này sẽ được cài đặt qua `paru` (AUR Helper) hoặc `pacman`
 - `wget`: Công cụ tải file qua mạng từ dòng lệnh với khả năng tiếp tục tải khi đứt mạng.
 
 ### 2. Trình quản lý gói & Môi trường đóng gói
-- `flatpak`: Hệ thống đóng gói và phân phối ứng dụng trong môi trường sandbox cô lập (dùng để cài Sober chơi Roblox).
+- `flatpak`: Hệ thống đóng gói và phân phối ứng dụng trong môi trường sandbox cô lập.
 
 ### 3. Ngôn ngữ & Runtime
 - `nodejs`: Môi trường thực thi JavaScript phía máy chủ (Node.js runtime).
@@ -43,6 +43,74 @@ Các gói này sẽ được cài đặt qua `paru` (AUR Helper) hoặc `pacman`
 
 ---
 
+## APT (Debian / Ubuntu)
+
+Các gói này sẽ được cài đặt trực tiếp qua `apt` trên Ubuntu, Debian, Linux Mint, Pop!_OS.
+
+### 1. Công cụ biên dịch & Quản lý mã nguồn
+- `build-essential`: Bộ công cụ biên dịch gcc, g++, make... (tương đương base-devel).
+- `git`: Quản lý phiên bản mã nguồn, clone repository.
+- `curl`: Tiện ích dòng lệnh truyền tải dữ liệu qua giao thức mạng.
+- `wget`: Công cụ tải file qua mạng từ dòng lệnh.
+
+### 2. Ngôn ngữ & Runtime
+- `nodejs`: Môi trường thực thi JavaScript Node.js runtime.
+- `npm`: Trình quản lý package Node.js.
+
+### 3. Bộ gõ Tiếng Việt (Fcitx5)
+- `fcitx5`: Khung bộ gõ tiếng Việt thế hệ mới cho Linux.
+- `fcitx5-unikey`: Engine gõ tiếng Việt (Unikey) cho Fcitx5.
+- `fcitx5-config-qt`: Giao diện cấu hình bộ gõ Fcitx5.
+- `fcitx5-frontend-gtk3`: Module tích hợp cho ứng dụng nền tảng GTK3.
+- `fcitx5-frontend-gtk4`: Module tích hợp cho ứng dụng nền tảng GTK4.
+- `fcitx5-frontend-qt5`: Module tích hợp cho ứng dụng nền tảng Qt5.
+
+### 4. Font chữ (Hỗ trợ tiếng Việt & Emoji)
+- `fonts-inter`: Phông chữ Inter sắc nét cho giao diện hệ thống và trình duyệt.
+- `fonts-noto-color-emoji`: Bộ phông chữ màu hiển thị emoji từ Google.
+
+### 5. Trình duyệt Web & Tiện ích Desktop
+- `brave-browser`: Trình duyệt web Brave chặn quảng cáo và tracker mặc định.
+- `rofi`: Trình khởi chạy ứng dụng (app launcher).
+- `chafa`: Công cụ xem hình ảnh nhanh trong Terminal.
+
+*(Ghi chú: `uv`, `pnpm` và `JetBrains Mono Nerd Font` sẽ được script tự động tải và cài đặt bản chính thức).*
+
+---
+
+## DNF (Fedora)
+
+Các gói này sẽ được cài đặt trực tiếp qua `dnf` trên Fedora, RHEL, Nobara.
+
+### 1. Công cụ biên dịch & Quản lý mã nguồn
+- `git`: Quản lý phiên bản mã nguồn.
+- `curl`: Tiện ích truyền tải mạng.
+- `wget`: Tiện ích tải file qua mạng.
+
+### 2. Ngôn ngữ & Runtime
+- `nodejs`: Môi trường thực thi JavaScript Node.js.
+- `npm`: Trình quản lý package Node.js.
+
+### 3. Bộ gõ Tiếng Việt (Fcitx5)
+- `fcitx5`: Khung bộ gõ thế hệ mới cho Linux.
+- `fcitx5-unikey`: Engine gõ tiếng Việt Unikey cho Fcitx5.
+- `fcitx5-configtool`: Giao diện cấu hình bộ gõ Fcitx5.
+- `fcitx5-gtk`: Module tích hợp bộ gõ cho GTK.
+- `fcitx5-qt`: Module tích hợp bộ gõ cho Qt.
+
+### 4. Font chữ (Hỗ trợ tiếng Việt & Emoji)
+- `inter-fonts`: Phông chữ Inter hiển thị rõ nét trên giao diện desktop.
+- `google-noto-emoji-color-fonts`: Phông chữ emoji đầy đủ màu sắc từ Google.
+
+### 5. Trình duyệt Web & Tiện ích Desktop
+- `brave-browser`: Trình duyệt web Brave chặn quảng cáo mặc định.
+- `rofi`: Trình khởi chạy ứng dụng (app launcher).
+- `chafa`: Công cụ hiển thị ảnh trong terminal.
+
+*(Ghi chú: `uv`, `pnpm` và `JetBrains Mono Nerd Font` sẽ được script tự động tải và cài đặt bản chính thức).*
+
+---
+
 ## Flatpak
 
 *(Hiện tại phần Manager chưa cần cài đặt thêm ứng dụng Flatpak nào)*
@@ -60,4 +128,3 @@ QT_IM_MODULE=fcitx
 XMODIFIERS=@im=fcitx
 ```
 *(Script `setup.sh` sẽ tự động cấu hình phần này cho bạn)*
-
