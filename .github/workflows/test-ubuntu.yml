@@ -1,0 +1,44 @@
+name: Test on Ubuntu
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master, dev ]
+  workflow_dispatch:
+
+jobs:
+  test-ubuntu:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install test dependencies in container
+        run: |
+          apt-get update -y
+          apt-get install -y --no-install-recommends sudo bash gawk git ca-certificates curl findutils
+
+      - name: Create non-root tester user
+        run: |
+          useradd -m -s /bin/bash tester
+          echo "tester ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          chown -R tester:tester .
+          chmod +x install.sh setup.sh scripts/*.sh scripts/lib/*.sh
+
+      - name: Validate Bash syntax
+        run: |
+          su tester -c "bash -n install.sh setup.sh scripts/*.sh scripts/lib/*.sh"
+
+      - name: Test OS detection & package check (Dry run)
+        run: |
+          su tester -c "./install.sh check"
+
+      - name: Test dotfile configuration linking
+        run: |
+          su tester -c "./setup.sh links"
+          su tester -c "test -L ~/.config/autostart/fcitx5.desktop"
+          su tester -c "test -L ~/.config/environment.d/fcitx5.conf"
